@@ -74,6 +74,16 @@ export async function adminListCommerces(token: string) {
   return res.data
 }
 
+export async function listCommerces(): Promise<any[]> {
+  const res = await axios.get(`${BACKEND}/commerces`)
+  return res.data
+}
+
+export async function createCommerce(token: string, payload: any) {
+  const res = await axios.post(`${BACKEND}/commerces`, payload, { headers: { Authorization: `Bearer ${token}` } })
+  return res.data
+}
+
 export async function adminActivateCommerce(token: string, id: number) {
   const res = await axios.patch(`${BACKEND}/admin/commerces/${id}/activate`, {}, { headers: { Authorization: `Bearer ${token}` } })
   return res.data

@@ -14,5 +14,6 @@ router.patch('/commerces/:id/deactivate', requireAuth, requireAdmin, handleAsync
 
 router.get('/stats', requireAuth, requireAdmin, handleAsync(adminCtrl.stats))
 router.get('/search', requireAuth, requireAdmin, handleAsync(adminCtrl.search))
+router.patch('/users/:id/promote', requireAuth, requireAdmin, handleAsync(adminCtrl.promoteUser))
 
 export default router

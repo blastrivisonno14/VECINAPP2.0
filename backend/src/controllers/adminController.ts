@@ -61,4 +61,13 @@ export const search = async (req: Request, res: Response) => {
   }
 }
 
+export const promoteUser = async (req: Request, res: Response) => {
+  const id = Number(req.params.id)
+  const user = await prisma.user.findUnique({ where: { id } })
+  if (!user) return res.status(404).send({ error: 'user not found' })
+  if (user.role === 'ADMIN') return res.status(400).send({ error: 'already admin' })
+  const updated = await prisma.user.update({ where: { id }, data: { role: 'ADMIN' as any } })
+  res.send({ id: updated.id, email: updated.email, role: updated.role })
+}
+
 export default { pendingPromotions, approvePromotion }

@@ -1,6 +1,7 @@
 import { FormEvent, useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useToast } from '../context/ToastContext'
+import { useNavigate, Navigate, Link } from 'react-router-dom'
 
 export default function Login() {
   const { login, user, loading } = useAuth()
@@ -8,6 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (user) {
@@ -26,43 +28,33 @@ export default function Login() {
     setError(null)
     try {
       await login(email, password)
+      showToast('Inicio de sesión exitoso', 'success')
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Error de autenticación')
+      const msg = err?.response?.data?.error || 'Error de autenticación'
+      setError(msg)
+      showToast(msg, 'error')
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm bg-white shadow rounded p-6 space-y-4">
+      <form onSubmit={onSubmit} className="w-full max-w-sm card space-y-4">
         <h1 className="text-xl font-semibold text-gray-800">Iniciar sesión</h1>
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-indigo-200"
-            required
-          />
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input" required />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-indigo-200"
-            required
-          />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input" required />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded py-2 text-sm font-medium disabled:opacity-60"
-        >
+        <button type="submit" disabled={loading} className="btn btn-primary w-full">
           {loading ? 'Accediendo...' : 'Entrar'}
         </button>
+        <div className="text-center text-xs text-gray-600">
+          ¿No tienes cuenta? <Link to="/register" className="text-indigo-600 hover:underline">Regístrate</Link>
+        </div>
       </form>
     </div>
   )

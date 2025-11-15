@@ -7,6 +7,7 @@ type AuthContextValue = {
   user: User | null
   token: string | null
   login: (email: string, password: string) => Promise<void>
+  register: (payload: { name?: string; email: string; password: string; role: string }) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -45,12 +46,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const register = async (payload: { name?: string; email: string; password: string; role: string }) => {
+    const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:4000'
+    setLoading(true)
+    try {
+      const res = await axios.post(`${BACKEND}/auth/register`, payload)
+      const access = res.data.accessToken || res.data.token || res.data.access
+      if (access) setToken(access)
+      if (res.data.user) setUser(res.data.user)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const logout = () => {
     setToken(null)
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, token, login, logout, loading }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

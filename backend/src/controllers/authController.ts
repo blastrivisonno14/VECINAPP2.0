@@ -87,6 +87,15 @@ export const logout = async (req: Request, res: Response) => {
   res.send({ ok: true })
 }
 
+export const me = async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (!user) return res.status(401).send({ error: 'unauthorized' })
+  // fetch full user to include role and name
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+  if (!dbUser) return res.status(404).send({ error: 'user not found' })
+  res.send({ id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role })
+}
+
 function parseRefreshExpMs(exp: string) {
   // simple parser for values like '30d', '15m'
   if (exp.endsWith('d')) {

@@ -7,6 +7,7 @@ const router = Router()
 
 router.post('/', requireAuth, handleAsync(commerceCtrl.createCommerce))
 router.get('/', handleAsync(commerceCtrl.listCommerces))
+router.get('/mine', requireAuth, handleAsync(commerceCtrl.myCommerce))
 router.get('/:id', handleAsync(commerceCtrl.getCommerce))
 router.patch('/:id', requireAuth, handleAsync(commerceCtrl.updateCommerce))
 
