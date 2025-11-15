@@ -8,6 +8,7 @@ type AuthContextValue = {
   token: string | null
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -18,6 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return s ? JSON.parse(s) : null
   })
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('vecin_token'))
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (user) localStorage.setItem('vecin_user', JSON.stringify(user))
@@ -31,12 +33,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:4000'
-    const res = await axios.post(`${BACKEND}/auth/login`, { email, password })
-    const token = res.data.token
-    setToken(token)
-    // fetch me
-    const me = await axios.get(`${BACKEND}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
-    if (me && me.data) setUser(me.data)
+    setLoading(true)
+    try {
+      const res = await axios.post(`${BACKEND}/auth/login`, { email, password })
+      const access = res.data.accessToken || res.data.token
+      setToken(access)
+      const me = await axios.get(`${BACKEND}/auth/me`, { headers: { Authorization: `Bearer ${access}` } }).catch(() => null)
+      if (me && me.data) setUser(me.data)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const logout = () => {
@@ -44,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, token, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, token, login, logout, loading }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
