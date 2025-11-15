@@ -11,8 +11,22 @@ export const createPromotion = async (req: Request, res: Response) => {
   // initialize remainingCoupons
   const max = parsed.data.maxCoupons ?? null
   const remaining = max ?? 0
-  const data = { ...parsed.data, commerceId, remainingCoupons: remaining }
-  const promotion = await prisma.promotion.create({ data })
+  const promotion = await prisma.promotion.create({
+    data: {
+      title: parsed.data.title,
+      description: parsed.data.description ?? '',
+      imageUrl: parsed.data.imageUrl,
+      discountType: (parsed.data.discountType.toUpperCase()) as any,
+      discountValue: parsed.data.discountValue ?? null,
+      startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : null,
+      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
+      daysOfWeek: (parsed.data.daysOfWeek ?? []).map(d => d.toUpperCase()) as any,
+      maxCoupons: parsed.data.maxCoupons ?? null,
+      remainingCoupons: remaining,
+      isActive: true,
+      commerce: { connect: { id: commerceId } },
+    },
+  })
   res.status(201).send(promotion)
 }
 
@@ -30,9 +44,12 @@ export const nearbyPromotions = async (req: Request, res: Response) => {
   const promotions = await prisma.promotion.findMany({
     where: {
       isActive: true,
-      lat: { gte: lat - delta, lte: lat + delta },
-      lng: { gte: lng - delta, lte: lng + delta },
+      commerce: {
+        lat: { gte: lat - delta, lte: lat + delta },
+        lng: { gte: lng - delta, lte: lng + delta },
+      },
     },
+    include: { commerce: true },
     take: 200,
   })
   res.send(promotions)
@@ -56,7 +73,21 @@ export const updatePromotion = async (req: Request, res: Response) => {
   const commerce = await prisma.commerce.findUnique({ where: { id: existing.commerceId } })
   if (!commerce) return res.status(404).send({ error: 'commerce not found' })
   if (user?.id !== commerce.ownerId && user?.role !== 'ADMIN') return res.status(403).send({ error: 'forbidden' })
-  const updated = await prisma.promotion.update({ where: { id }, data: parsed.data })
+  const updateData: any = { ...parsed.data }
+  if (updateData.discountType) {
+    updateData.discountType = updateData.discountType.toUpperCase()
+  }
+  if (updateData.daysOfWeek) {
+    updateData.daysOfWeek = updateData.daysOfWeek.map((d: string) => d.toUpperCase())
+  }
+  if (updateData.startDate) updateData.startDate = new Date(updateData.startDate)
+  if (updateData.endDate) updateData.endDate = new Date(updateData.endDate)
+  if (updateData.description === undefined) delete updateData.description
+  if (updateData.commerceId) {
+    updateData.commerce = { connect: { id: updateData.commerceId } }
+    delete updateData.commerceId
+  }
+  const updated = await prisma.promotion.update({ where: { id }, data: updateData })
   res.send(updated)
 }
 

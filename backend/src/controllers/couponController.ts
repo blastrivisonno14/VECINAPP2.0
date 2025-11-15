@@ -12,7 +12,13 @@ export const createCoupon = async (req: Request, res: Response) => {
 
   // create coupon entry with temporary qrCode (uuid) to ensure uniqueness
   const temp = randomUUID()
-  const coupon = await prisma.coupon.create({ data: { promotionId, userId: userId ?? undefined, qrCode: temp } })
+  const coupon = await prisma.coupon.create({
+    data: {
+      promotion: { connect: { id: promotionId } },
+      user: userId ? { connect: { id: userId } } : undefined,
+      qrCode: temp,
+    },
+  })
 
   // sign a QR token containing couponId and userId
   const token = qrService.signQR({ couponId: coupon.id, userId: coupon.userId ?? null })
