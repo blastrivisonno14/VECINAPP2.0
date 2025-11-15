@@ -2,6 +2,8 @@ import { FormEvent, useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useNavigate, Navigate } from 'react-router-dom'
+import axios from 'axios'
+import { getBackendURL } from '../config'
 
 export default function Register() {
   const { register, user, loading } = useAuth()
@@ -11,7 +13,9 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('user')
   const [error, setError] = useState<string | null>(null)
+  const [backendOk, setBackendOk] = useState<boolean | null>(null)
   const { showToast } = useToast()
+  const backendUrl = getBackendURL()
 
   useEffect(() => {
     if (user) {
@@ -20,6 +24,10 @@ export default function Register() {
       else navigate('/', { replace: true })
     }
   }, [user, navigate])
+
+  useEffect(() => {
+    axios.get(`${backendUrl}/health`).then(() => setBackendOk(true)).catch(() => setBackendOk(false))
+  }, [backendUrl])
 
   if (user) return <Navigate to='/' replace />
 
@@ -50,6 +58,11 @@ export default function Register() {
     <div className='min-h-screen flex items-center justify-center bg-gray-50 p-4'>
       <form onSubmit={onSubmit} className='w-full max-w-sm bg-white shadow rounded p-6 space-y-4'>
         <h1 className='text-xl font-semibold text-gray-800'>Crear cuenta</h1>
+        {backendOk === false && (
+          <div className='text-xs p-2 rounded bg-red-50 text-red-700 border border-red-200'>
+            No se puede contactar al backend en <span className='font-mono'>{backendUrl}</span>. Revisa la variable VITE_BACKEND_URL.
+          </div>
+        )}
         {error && <div className='text-red-600 text-sm'>{error}</div>}
         <div className='flex flex-col gap-1'>
           <label className='text-sm font-medium text-gray-700'>Nombre</label>
