@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Enumerations
+enum Role {
+  USER     @map("user")
+  COMMERCE @map("commerce")
+  ADMIN    @map("admin")
+}
+
+enum DiscountType {
+  PERCENT   @map("percent")
+  AMOUNT    @map("amount")
+  TWOXONE   @map("2x1")
+  COMBO     @map("combo")
+  HAPPYHOUR @map("happyhour")
+}
+
+enum DayOfWeek {
+  MONDAY    @map("monday")
+  TUESDAY   @map("tuesday")
+  WEDNESDAY @map("wednesday")
+  THURSDAY  @map("thursday")
+  FRIDAY    @map("friday")
+  SATURDAY  @map("saturday")
+  SUNDAY    @map("sunday")
+}
+
+/// Models
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+
+  // Relations
+  commerces    Commerce[]
+  coupons      Coupon[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Commerce {
+  id        Int       @id @default(autoincrement())
+  ownerId   Int
+  name      String
+  address   String
+  lat       Float?
+  lng       Float?
+  category  String?
+  logoUrl   String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  // Relations
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  promotions Promotion[]
+
+  @@index([ownerId])
+  @@map("commerces")
+}
+
+model Promotion {
+  id               Int          @id @default(autoincrement())
+  commerceId       Int
+  title            String
+  description      String
+  imageUrl         String?
+  discountType     DiscountType
+  discountValue    Float?
+  startDate        DateTime?
+  endDate          DateTime?
+  daysOfWeek       DayOfWeek[]  @default([])
+  maxCoupons       Int?
+  remainingCoupons Int          @default(0)
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+
+  // Relations
+  commerce         Commerce     @relation(fields: [commerceId], references: [id], onDelete: Cascade)
+  coupons          Coupon[]
+
+  @@index([commerceId])
+  @@index([isActive, startDate, endDate])
+  @@map("promotions")
+}
+
+model Coupon {
+  id          Int       @id @default(autoincrement())
+  userId      Int?
+  promotionId Int
+  qrCode      String    @unique
+  redeemedAt  DateTime?
+
+  // Relations
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+  @@index([userId])
+  @@map("coupons")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked    Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Notes:
+// - The enums map to the requested string values in the DB via @map.
+// - `daysOfWeek` is stored as an enum array (Postgres native array). Requires Postgres connector.
+// - Application-level validations should ensure invariants like `remainingCoupons <= maxCoupons`.
