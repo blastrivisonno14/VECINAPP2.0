@@ -8,7 +8,8 @@ services:
     region: oregon
     plan: starter
     autoDeploy: true
-    buildCommand: cd backend && npm ci && npm run build
+    # Instalar también devDependencies (tipos) aunque NODE_ENV=production
+    buildCommand: cd backend && npm install --include=dev && npm run build
     startCommand: sh -lc "cd backend && npx prisma generate && npx prisma migrate deploy && npm run start:prod"
     healthCheckPath: /health
     envVars:
@@ -26,7 +27,7 @@ services:
   - type: web
     name: vecinapp-frontend
     env: static
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install --include=dev && npm run build
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_BACKEND_URL
