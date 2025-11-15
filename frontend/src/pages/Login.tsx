@@ -30,7 +30,14 @@ export default function Login() {
       await login(email, password)
       showToast('Inicio de sesión exitoso', 'success')
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Error de autenticación'
+      let msg: string
+      if (err?.response) {
+        msg = err.response.data?.error || err.response.data?.message || 'Error de autenticación'
+      } else if (err?.request) {
+        msg = 'No se pudo conectar con el backend. Verifica VITE_BACKEND_URL.'
+      } else {
+        msg = 'Error de autenticación'
+      }
       setError(msg)
       showToast(msg, 'error')
     }

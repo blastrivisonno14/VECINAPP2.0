@@ -33,7 +33,14 @@ export default function Register() {
         navigate('/merchant/commerce/new', { replace: true })
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Error en registro'
+      let msg: string
+      if (err?.response) {
+        msg = err.response.data?.error || err.response.data?.message || 'Error en registro'
+      } else if (err?.request) {
+        msg = 'No se pudo conectar con el backend. Verifica VITE_BACKEND_URL.'
+      } else {
+        msg = 'Error en registro'
+      }
       setError(msg)
       showToast(msg, 'error')
     }

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
+import { getBackendURL } from '../config'
 
 type User = { id: number; email: string; role: string; name?: string; commerceId?: number }
 
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token])
 
   const login = async (email: string, password: string) => {
-    const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:4000'
+    const BACKEND = getBackendURL()
     setLoading(true)
     try {
       const res = await axios.post(`${BACKEND}/auth/login`, { email, password })
@@ -47,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const register = async (payload: { name?: string; email: string; password: string; role: string }) => {
-    const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:4000'
+    const BACKEND = getBackendURL()
     setLoading(true)
     try {
       const res = await axios.post(`${BACKEND}/auth/register`, payload)

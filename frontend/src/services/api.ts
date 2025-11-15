@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { Promotion } from '../types'
+import { getBackendURL } from '../config'
 
-const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:4000'
+const BACKEND = getBackendURL()
 
 export async function getNearbyPromotions(lat: number, lng: number): Promise<Promotion[]> {
   const res = await axios.get(`${BACKEND}/promotions/nearby`, { params: { lat, lng } })
