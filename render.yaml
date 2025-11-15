@@ -10,7 +10,7 @@ services:
     autoDeploy: true
     # Instalar también devDependencies (tipos) aunque NODE_ENV=production
     buildCommand: cd backend && npm install --include=dev && npm run build
-    startCommand: sh -lc "cd backend && npx prisma generate && npx prisma migrate deploy && npm run start:prod"
+    startCommand: sh -lc "cd backend && npx prisma generate && (npx prisma migrate deploy || npx prisma db push) && npm run start:prod"
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

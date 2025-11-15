@@ -16,5 +16,5 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 EXPOSE 4000
-# Ejecutar migraciones antes de iniciar el servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Generar cliente Prisma y ejecutar migraciones; si no hay migraciones, usar db push
+CMD ["sh", "-c", "npx prisma generate && (npx prisma migrate deploy || npx prisma db push) && node dist/index.js"]
